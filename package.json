@@ -1,0 +1,16 @@
+{
+  "name": "rdfstarsql",
+  "version": "0.1.0",
+  "description": "an RDF/JS compliant lightweight RDF-star quadstore backed by SQLite",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/smurp/rdfstarsql.git"
+  },
+  "author": "Shawn Murphy <smurp@smurp.com>",
+  "license": "MIT"
+}
