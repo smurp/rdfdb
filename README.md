@@ -13,7 +13,7 @@ Problems:
 1. do quads need ids?
 2. 
 
-!()[https://kroki.io/erd/svg/eNp9kMsKwjAQRffzFYMrNXbh1r8Q3ImLsR3aaJqG6aRQxH838UEpitt7zz0ZcjywtCdY2wpvjs7sdriwXrlmwSC2JRnxyiNS1M76Urhlr4s76Bh4WpQNCS6j2A32KqvUN9Q3M2PKBnJTNJDk1QZ9p-ijcwmA40FscPx9zwz7cudrZ4TpwQQwXTLuI1XJlzdg9KkHUwPkHLdFscbXm5PwBSXLuzBFscX8TRPSx_OFS_3LBOHKlqT_Td1H9LznB1ALhSb1D2NPi0o=]
+![])https://kroki.io/erd/svg/eNp9kMsKwjAQRffzFYMrNXbh1r8Q3ImLsR3aaJqG6aRQxH838UEpitt7zz0ZcjywtCdY2wpvjs7sdriwXrlmwSC2JRnxyiNS1M76Urhlr4s76Bh4WpQNCS6j2A32KqvUN9Q3M2PKBnJTNJDk1QZ9p-ijcwmA40FscPx9zwz7cudrZ4TpwQQwXTLuI1XJlzdg9KkHUwPkHLdFscbXm5PwBSXLuzBFscX8TRPSx_OFS_3LBOHKlqT_Td1H9LznB1ALhSb1D2NPi0o=)
 
 <!--
 
