@@ -1,8 +1,8 @@
 
-import {default as sqlite} from 'sqlite3';  // Is there a way to do this
-var sqlite3 = sqlite.verbose(); // and this on without sqlite3Module?
+import duckdb from 'duckdb';
 
-export class RDFStarSQL {
+
+export class RDFDb {
   /*
 https://rdf.js.org/stream-spec/#constructoroptions-interface
     
@@ -17,7 +17,7 @@ interface ConstructorOptions {
     this.dataFactory = dataFactory;
     this.baseIRI = baseIRI;
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties
-    this.#db = new sqlite3.Database(location, dbode, dbCallback);
+    this.#db = new duckdb.Database(location, dbMode, dbCallback);
     this.#ensure_structure();
   }
 
