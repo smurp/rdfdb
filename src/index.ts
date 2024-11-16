@@ -2,9 +2,23 @@
 
 import * as NodeDuckDB from 'duckdb';
 import * as WasmDuckDB from '@duckdb/duckdb-wasm';
+import { DataFactory, Term, Quad, Stream as RDFStream, Sink, Source, Store } from '@rdfjs/types';
+import { EventEmitter } from 'events';
 
-export class RDFDb {
-  // ... [Existing properties]
+// Define the ConstructorOptions interface
+interface ConstructorOptions {
+  dataFactory?: DataFactory;
+  baseIRI?: string;
+  location?: string;
+  dbMode?: number;
+  dbCallback?: (err: Error | null) => void;
+}
+
+export class RDFDb implements Store {
+  private dataFactory?: DataFactory;
+  private baseIRI?: string;
+  private db: any; // Use appropriate types for duckdb instances
+  private connection: any; // Use appropriate types for duckdb connections
 
   private constructor() {
     // Private constructor
@@ -19,7 +33,11 @@ export class RDFDb {
     return instance;
   }
 
-  private async initDatabase(location: string, dbMode?: number, dbCallback?: (err: Error | null) => void) {
+  private async initDatabase(
+    location: string,
+    dbMode?: number,
+    dbCallback?: (err: Error | null) => void
+  ) {
     let duckdb: any;
 
     if (typeof process !== 'undefined' && process.versions && process.versions.node) {
@@ -44,5 +62,83 @@ export class RDFDb {
     await this.ensureStructure();
   }
 
-  // ... [Rest of the class methods]
+  // Ensure the database structure exists
+  private async ensureStructure(): Promise<void> {
+    await this.connection.run(`
+      CREATE TABLE IF NOT EXISTS kv ();
+    `);
+  }
+
+  /*
+    Stream Interface Methods
+    [Exposed=(Window,Worker)]
+    interface Stream : EventEmitter {
+      any read();
+      attribute Event readable;
+      attribute Event end;
+      attribute Event error;
+      attribute Event data;
+      attribute Event prefix;
+    };
+  */
+  read(): any {
+    // Implement the read method
+    throw new Error('read() not implemented');
+  }
+
+  // Source Interface Methods
+  /*
+    interface Source {
+      constructor();
+      constructor(ConstructorOptions options);
+      Stream match(optional Term? subject, optional Term? predicate, optional Term? object, optional Term? graph);
+    };
+  */
+  match(
+    subject?: Term | null,
+    predicate?: Term | null,
+    object?: Term | null,
+    graph?: Term | null
+  ): RDFStream {
+    throw new Error('match(s,p,o,g) not implemented');
+  }
+
+  // Sink Interface Methods
+  /*
+    interface Sink {
+      constructor();
+      constructor(ConstructorOptions options);
+      EventEmitter import(Stream stream);
+    };
+  */
+  import(stream: RDFStream): EventEmitter {
+    throw new Error('import(stream) not implemented');
+  }
+
+  // Store Interface Methods (extends Source and Sink)
+  /*
+    interface Store {
+      constructor();
+      constructor(ConstructorOptions options);
+      EventEmitter remove(Stream stream);
+      EventEmitter removeMatches(optional Term? subject, optional Term? predicate, optional Term? object, optional Term? graph);
+      EventEmitter deleteGraph((Term or DOMString) graph);
+    };
+  */
+  remove(stream: RDFStream): EventEmitter {
+    throw new Error('remove(stream) not implemented');
+  }
+
+  removeMatches(
+    subject?: Term | null,
+    predicate?: Term | null,
+    object?: Term | null,
+    graph?: Term | null
+  ): EventEmitter {
+    throw new Error('removeMatches(s,p,o,g) not implemented');
+  }
+
+  deleteGraph(graph: Term | string): EventEmitter {
+    throw new Error('deleteGraph(graph) not implemented');
+  }
 }

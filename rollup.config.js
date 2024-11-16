@@ -2,6 +2,7 @@
 
 import typescript from 'rollup-plugin-typescript2';
 import resolve from '@rollup/plugin-node-resolve';
+import json from '@rollup/plugin-json';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
 
@@ -22,6 +23,7 @@ export default {
   },
   external: isBrowser ? [] : ['duckdb', 'fs', 'path', 'os', 'crypto', 'events', 'stream'],
   plugins: [
+    json(),
     replace({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
       'preventAssignment': true,
