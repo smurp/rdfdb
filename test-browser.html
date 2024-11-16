@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>RDFDb Browser Test</title>
+</head>
+<body>
+  <script type="module">
+    import { RDFDb } from './dist/rdfdb.browser.js';
+    (async function() {
+      const rdfDb = await RDFDb.create();
+      console.log('RDFDb instance created in the browser');
+      // Perform additional tests here
+    })();
+  </script>
+</body>
+</html>
