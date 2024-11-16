@@ -1,11 +1,9 @@
 // src/index.ts
 
-import * as NodeDuckDB from 'duckdb';
-import * as WasmDuckDB from '@duckdb/duckdb-wasm';
-import { DataFactory, Term, Quad, Stream as RDFStream, Sink, Source, Store } from '@rdfjs/types';
+import { getDuckDB } from 'duckdb-platform'; // This will be aliased to the correct module
+import { DataFactory, Term, Stream as RDFStream, Store } from '@rdfjs/types';
 import { EventEmitter } from 'events';
 
-// Define the ConstructorOptions interface
 interface ConstructorOptions {
   dataFactory?: DataFactory;
   baseIRI?: string;
@@ -17,8 +15,8 @@ interface ConstructorOptions {
 export class RDFDb implements Store {
   private dataFactory?: DataFactory;
   private baseIRI?: string;
-  private db: any; // Use appropriate types for duckdb instances
-  private connection: any; // Use appropriate types for duckdb connections
+  private db: any;
+  private connection: any;
 
   private constructor() {
     // Private constructor
@@ -29,40 +27,15 @@ export class RDFDb implements Store {
     const { dataFactory, baseIRI, location = ':memory:', dbMode, dbCallback } = options;
     instance.dataFactory = dataFactory;
     instance.baseIRI = baseIRI;
-    await instance.initDatabase(location, dbMode, dbCallback);
+
+    const { db, connection } = await getDuckDB(location, dbMode, dbCallback);
+    instance.db = db;
+    instance.connection = connection;
+
+    await instance.ensureStructure();
     return instance;
   }
 
-  private async initDatabase(
-    location: string,
-    dbMode?: number,
-    dbCallback?: (err: Error | null) => void
-  ) {
-    let duckdb: any;
-
-    if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-      // Node.js environment
-      duckdb = NodeDuckDB;
-      this.db = new duckdb.Database(location, dbMode, dbCallback);
-      this.connection = this.db.connect();
-    } else {
-      // Browser environment
-      duckdb = WasmDuckDB;
-      const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
-      const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
-      const logger = new duckdb.ConsoleLogger();
-      const worker = await duckdb.createWorker(bundle.mainWorker);
-      const db = new duckdb.AsyncDuckDB(logger, worker);
-
-      await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-      this.db = db;
-      this.connection = await db.connect();
-    }
-
-    await this.ensureStructure();
-  }
-
-  // Ensure the database structure exists
   private async ensureStructure(): Promise<void> {
     await this.connection.run(`
       CREATE TABLE IF NOT EXISTS kv ();

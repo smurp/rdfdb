@@ -8,7 +8,11 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": "./",
+    "paths": {
+      "duckdb-platform": ["src/duckdb-platform.d.ts"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

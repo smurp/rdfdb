@@ -2,37 +2,39 @@
 
 import typescript from 'rollup-plugin-typescript2';
 import resolve from '@rollup/plugin-node-resolve';
-import json from '@rollup/plugin-json';
-import commonjs from '@rollup/plugin-commonjs';
+import alias from '@rollup/plugin-alias';
 import replace from '@rollup/plugin-replace';
 
-const isProduction = process.env.NODE_ENV === 'production';
 const isBrowser = process.env.BUILD_ENV === 'browser';
 
 export default {
-  input: 'src/index.ts', // Adjust the path to your entry file
+  input: 'src/index.ts',
   output: {
     file: isBrowser ? 'dist/rdfdb.browser.js' : 'dist/rdfdb.node.js',
-    format: isBrowser ? 'umd' : 'cjs',
-    name: 'RDFDb',
+    format: 'esm', // Use 'esm' format for both builds
     sourcemap: true,
-    globals: {
-      'duckdb': 'duckdb',
-      '@duckdb/duckdb-wasm': 'duckdb',
-    },
   },
-  external: isBrowser ? [] : ['duckdb', 'fs', 'path', 'os', 'crypto', 'events', 'stream'],
+  external: isBrowser
+    ? []
+    : ['duckdb', '@duckdb/duckdb-wasm', 'fs', 'path', 'os', 'crypto'],
   plugins: [
-    json(),
     replace({
+      preventAssignment: true,
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'preventAssignment': true,
+    }),
+    alias({
+      entries: [
+        {
+          find: 'duckdb-platform',
+          replacement: isBrowser ? './duckdb-browser.js' : './duckdb-node.js',
+        },
+      ],
     }),
     resolve({
       browser: isBrowser,
       preferBuiltins: !isBrowser,
     }),
-    commonjs(),
+    // Include commonjs plugin if needed
     typescript({
       tsconfigOverride: {
         compilerOptions: {
