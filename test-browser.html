@@ -9,7 +9,7 @@
     import { RDFDb } from './dist/rdfdb.browser.js';
     (async function() {
       const rdfDb = await RDFDb.create();
-      console.log('RDFDb instance created in the browser');
+      document.body.innerHTML = JSON.stringify([rdfDb]);
       // Perform additional tests here
     })();
   </script>
