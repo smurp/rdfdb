@@ -8,7 +8,8 @@
   <script type="module">
     import { RDFDb } from './dist/rdfdb.browser.js';
     (async function() {
-      const rdfDb = await RDFDb.create();
+      const rdfDb = new RDFDb({location: ':memory:'});
+      await rdfDb.open();
       document.body.innerHTML = JSON.stringify([rdfDb]);
       // Perform additional tests here
     })();
