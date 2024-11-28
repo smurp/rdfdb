@@ -8,7 +8,7 @@
 
 * multiformat blake2s 160 b58 ?
 
-## The Schema
+## The (eventual) Schema
 The schema is very under construction still.
 
 Problems:
