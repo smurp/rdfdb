@@ -103,6 +103,44 @@ test.describe('RDFDb Node.js Tests', () => {
     expect(await rdfDb.size).toEqual(2);
     clog('Graph deleted');
   });
+
+  test('should measure insertion performance', async () => {
+    test.setTimeout(30_000); // Override the timeout to 30 seconds
+
+    const numQuads = 50000; // Specify the number of quads to insert
+    const quads = [];
+
+    // Generate the quads
+    for (let i = 0; i < numQuads; i++) {
+      quads.push(
+        DataFactory.quad(
+          DataFactory.namedNode(`http://example.org/subject${i}`),
+          DataFactory.namedNode(`http://example.org/predicate${i}`),
+          DataFactory.namedNode(`http://example.org/object${i}`),
+          DataFactory.defaultGraph()
+        )
+      );
+    }
+
+    // Convert the quads array to a stream
+    const quadStream = Readable.from(quads);
+
+    const startTime = Date.now(); // Record the start time
+
+    // Insert the quads
+    await streamToPromise(rdfDb.import(quadStream));
+
+    const endTime = Date.now(); // Record the end time
+    const elapsedTimeInSeconds = (endTime - startTime) / 1000;
+    const quadsPerSecond = numQuads / elapsedTimeInSeconds;
+
+    console.log(`Inserted ${numQuads} quads in ${elapsedTimeInSeconds.toFixed(2)} seconds`);
+    console.log(`Insertion rate: ${quadsPerSecond.toFixed(2)} quads/second`);
+
+    // Assert that all quads were inserted
+    expect(await rdfDb.size).toEqual(numQuads);
+  });
+
 });
 
 function quadToString(quad) {
