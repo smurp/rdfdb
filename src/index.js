@@ -406,4 +406,29 @@ interface DatasetCore {
     });
   }
 
+  delete(quad) {
+    return new Promise((resolve, reject) => {
+      const deleteQuad = this.#db.prepare(`
+      DELETE FROM quads
+      WHERE subject = ? AND predicate = ? AND object = ? AND graph = ?;
+    `);
+
+      deleteQuad.run(
+        quad.subject.value,
+        quad.predicate.value,
+        quad.object.value,
+        quad.graph.value,
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(this); // Returning this allows method chaining
+          }
+        }
+      );
+
+      deleteQuad.finalize();
+    });
+  }
+
 }

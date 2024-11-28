@@ -149,6 +149,15 @@ test.describe('RDFDb Node.js Tests', () => {
     expect(await rdfDb.size).toEqual(0);
   });
 
+
+  test('should delete a single quad from the dataset', async () => {
+    await rdfDb.add(quad1); // Adding a quad
+    expect(await rdfDb.size).toEqual(1);
+
+    await rdfDb.delete(quad1); // Deleting the quad
+    expect(await rdfDb.size).toEqual(0);
+  });
+
 });
 
 function quadToString(quad) {
