@@ -149,13 +149,26 @@ test.describe('RDFDb Node.js Tests', () => {
     expect(await rdfDb.size).toEqual(0);
   });
 
-
   test('should delete a single quad from the dataset', async () => {
     await rdfDb.add(quad1); // Adding a quad
     expect(await rdfDb.size).toEqual(1);
 
     await rdfDb.delete(quad1); // Deleting the quad
     expect(await rdfDb.size).toEqual(0);
+  });
+
+  test('should check if a quad exists in the dataset', async () => {
+    await streamToPromise(rdfDb.import(Readable.from([quad1, quad2, quad3])));
+    expect(await rdfDb.size).toEqual(3);
+
+    const exists = await rdfDb.has(quad1);
+    expect(exists).toBe(true);
+
+    await rdfDb.delete(quad1); // Deleting the quad
+    expect(await rdfDb.size).toEqual(2);
+
+    const existsAfterDelete = await rdfDb.has(quad1);
+    expect(existsAfterDelete).toBe(false);
   });
 
 });

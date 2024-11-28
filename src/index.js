@@ -431,4 +431,31 @@ interface DatasetCore {
     });
   }
 
+  has(quad) {
+    return new Promise((resolve, reject) => {
+      const query = `
+      SELECT EXISTS (
+        SELECT 1 FROM quads
+        WHERE subject = ? AND predicate = ? AND object = ? AND graph = ?
+      ) AS exists;
+    `;
+
+      this.#db.all(
+        query,
+        quad.subject.value,
+        quad.predicate.value,
+        quad.object.value,
+        quad.graph.value,
+        (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            const exists = rows && rows.length > 0 ? Boolean(rows[0].exists) : false;
+            resolve(exists);
+          }
+        }
+      );
+    });
+  }
+
 }
