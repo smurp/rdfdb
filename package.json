@@ -1,6 +1,6 @@
 {
   "name": "rdfdb",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An RDF/JS compliant lightweight RDF-star quadstore backed by DuckDB",
   "main": "dist/rdfdb.node.js",
   "browser": "dist/rdfdb.browser.js",
@@ -33,9 +33,7 @@
     "cross-env": "^7.0.3",
     "onchange": "^7.1.0",
     "rollup": "^4.27.2",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "stream-browserify": "^3.0.0",
-    "typescript": "^5.6.3"
+    "stream-browserify": "^3.0.0"
   },
   "repository": {
     "type": "git",
