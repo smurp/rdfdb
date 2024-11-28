@@ -52,7 +52,7 @@ interface ConstructorOptions {
   
   // https://sqlite.org/datatype3.html
   #ensure_structure() {
-    console.log(`this.#db ===`, this.#db);
+    //console.log(`this.#db ===`, this.#db);
     this.#db.run(`
       CREATE TABLE IF NOT EXISTS quads (
         subject TEXT NOT NULL,
@@ -104,6 +104,7 @@ match() Returns a stream of Quads that processes all quads matching the pattern.
 
 When matching with graph set to undefined or null it MUST match all the graphs (sometimes called the union graph). To match only the default graph set graph to a DefaultGraph
   */
+
   match(subject, predicate, _object, graph) {
     const whereClauses = [];
     let params = [];
@@ -125,9 +126,11 @@ When matching with graph set to undefined or null it MUST match all the graphs (
       params.push(graph.value);
     }
 
-    const whereClause = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const whereClause =
+          whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
-    const query = `SELECT subject, predicate, object, graph FROM quads ${whereClause};`;
+    const query =
+          `SELECT subject, predicate, object, graph FROM quads ${whereClause};`;
 
     const stream = new Readable({
       objectMode: true,
@@ -138,28 +141,31 @@ When matching with graph set to undefined or null it MUST match all the graphs (
     if (params.length) {
       quargs.push(params);
     }
-    console.log({quargs});
 
-    this.#db.each(
+    // ideally this would use this.#db.each but the 2nd cb arg is never called
+    this.#db.all(
       ...quargs,
-      (err, row) => {
+      (err, rows) => {
         if (err) {
           stream.emit('error', err);
-        } else {
+          return
+        }
+        let num = 0;
+        rows.forEach((row) => {
           const quad = this.dataFactory.quad(
             this.dataFactory.namedNode(row.subject),
             this.dataFactory.namedNode(row.predicate),
             this.dataFactory.namedNode(row.object),
             this.dataFactory.namedNode(row.graph)
           );
+          //console.log(`match()`, { quad });
+          num++;
           stream.push(quad);
-        }
-      },
-      () => {
+        })
+        //console.log('stream concluded', {num});
         stream.push(null); // Signal end of stream
       }
     );
-
     return stream;
   }
 
@@ -175,35 +181,46 @@ interface Sink {
 A Sink is an object that consumes data from different kinds of streams. It can store the content of the stream or do some further processing. For example parsers, serializers, transformations and stores can implement the Sink interface.
 
 import() Consumes the given stream. The end and error events are used like described in the Stream interface. Depending on the use case, subtypes of EventEmitter or Stream are used.
-
-
   */
+
   import(stream) {
-    //console.log({EventEmitter});
     const emitter = new EventEmitter();
-    
-    const insertQuad = this.#db.prepare(`
-      INSERT INTO quads (subject, predicate, object, graph) VALUES (?, ?, ?, ?);
-    `);
-    
-    stream.on('data', async (quad) => {
-      try {
-        await insertQuad.run([
+    const insertQuad = this.#db.prepare(`INSERT INTO quads (subject, predicate, object, graph) VALUES (?, ?, ?, ?);`);
+
+    const promises = [];
+
+    stream.on('data', (quad) => {
+      const p = new Promise((resolve, reject) => {
+        insertQuad.run(
           quad.subject.value,
           quad.predicate.value,
           quad.object.value,
           quad.graph.value,
-        ]);
-      } catch (err) {
-        emitter.emit('error', err);
-      }
+          (err) => {
+            if (err) {
+              emitter.emit('error', err);
+              reject(err);
+            } else {
+              //console.log(`import`);
+              resolve();
+            }
+          }
+        );
+      });
+      promises.push(p);
     });
-    
+
     stream.on('end', () => {
-      insertQuad.finalize();
-      emitter.emit('end');
+      Promise.all(promises)
+        .then(() => {
+          insertQuad.finalize();
+          emitter.emit('end');
+        })
+        .catch((err) => {
+          emitter.emit('error', err);
+        });
     });
-    
+
     stream.on('error', (err) => {
       emitter.emit('error', err);
     });
@@ -211,9 +228,7 @@ import() Consumes the given stream. The end and error events are used like descr
     return emitter;
   }
 
-
-
-
+  
   /*
 [Exposed=(Window,Worker)]
 interface Store { // Extends Source and Sink
@@ -234,19 +249,39 @@ deleteGraph() Deletes the given named graph. The end and error events are used l
   */
   remove(stream) {
     const emitter = new EventEmitter();
-    stream.on('data', async (quad) => {
-      try {
-        await this.#db.run(
-          `DELETE FROM quads WHERE subject = ? AND predicate = ? AND object = ? AND graph = ?;`,
-          [quad.subject.value, quad.predicate.value, quad.object.value, quad.graph.value]
+    const deleteQuad = this.#db.prepare(`DELETE FROM quads WHERE subject = ? AND predicate = ? AND object = ? AND graph = ?;`);
+
+    const promises = [];
+
+    stream.on('data', (quad) => {
+      const p = new Promise((resolve, reject) => {
+        deleteQuad.run(
+          quad.subject.value,
+          quad.predicate.value,
+          quad.object.value,
+          quad.graph.value,
+          (err) => {
+            if (err) {
+              emitter.emit('error', err);
+              reject(err);
+            } else {
+              resolve();
+            }
+          }
         );
-      } catch (err) {
-        emitter.emit('error', err);
-      }
+      });
+      promises.push(p);
     });
 
     stream.on('end', () => {
-      emitter.emit('end');
+      Promise.all(promises)
+        .then(() => {
+          deleteQuad.finalize();
+          emitter.emit('end');
+        })
+        .catch((err) => {
+          emitter.emit('error', err);
+        });
     });
 
     stream.on('error', (err) => {
@@ -254,7 +289,6 @@ deleteGraph() Deletes the given named graph. The end and error events are used l
     });
 
     return emitter;
-    // throw new Error('remove(stream) not implemented');
   }
 
   removeMatches(subject, predicate, _object, graph) {
@@ -280,7 +314,8 @@ deleteGraph() Deletes the given named graph. The end and error events are used l
       params.push(graph.value);
     }
 
-    const whereClause = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const whereClause =
+          whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
     this.#db.run(`DELETE FROM quads ${whereClause};`, params, (err) => {
       if (err) {
@@ -313,4 +348,36 @@ deleteGraph() Deletes the given named graph. The end and error events are used l
     return emitter;
   }
 
+  get size() {
+    return new Promise((resolve, reject) => {
+      this.#db.all('SELECT COUNT(*) AS size FROM quads;', (err, row) => {
+        if (err) {
+          console.warn('Database query error:', err);
+          return reject(err);
+        }
+        const size = Number(row[0].size);
+        //console.log({ size }, size);
+        resolve(size);
+      });
+    }).catch((error) => {
+      console.error('Error fetching size:', error);
+      throw error;
+    });
+  }
+
+  /*  
+    DatasetCore Interface
+    https://rdf.js.org/dataset-spec/#datasetcore-interface
+
+    [Exposed=(Window,Worker)]
+interface DatasetCore {
+  readonly attribute unsigned long  size;
+  Dataset                           add (Quad quad);
+  Dataset                           delete (Quad quad);
+  boolean                           has (Quad quad);
+  Dataset                           match (optional Term? subject, optional Term? predicate, optional Term? _object, optional Term? graph);
+
+  iterable<Quad>;
+};
+  */
 }

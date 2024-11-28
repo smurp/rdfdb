@@ -11,7 +11,8 @@
     "build:browser": "cross-env BUILD_ENV=browser rollup -c",
     "build": "npm run build:node && npm run build:browser",
     "watch:build": "onchange -i \"src/**\" \"rollup.config.js\" -- npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "watch:test": "onchange -i \"dist/*.js\" \"test/playwright/node/rdfdb.spec.js\" -- npm test",
+    "test": "npx playwright test"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.29.0",

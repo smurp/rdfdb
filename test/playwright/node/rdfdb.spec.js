@@ -2,113 +2,106 @@ import { test, expect } from '@playwright/test';
 import { RDFDb, DataFactory } from '../../../dist/rdfdb.node.js';
 import { Readable } from 'stream';
 
+//const clog = console.log;
+const clog = () => {};
+
 test.describe('RDFDb Node.js Tests', () => {
   let rdfDb;
+  const quad1 = DataFactory.quad(
+    DataFactory.namedNode('http://example.org/subject1'),
+    DataFactory.namedNode('http://example.org/predicate1'),
+    DataFactory.namedNode('http://example.org/object1'),
+    DataFactory.defaultGraph()
+  );
+  
+  const quad2 = DataFactory.quad(
+    DataFactory.namedNode('http://example.org/subject2'),
+    DataFactory.namedNode('http://example.org/predicate2'),
+    DataFactory.literal('A literal value'),
+    DataFactory.defaultGraph()
+  );
+  
+  const quad3 = DataFactory.quad(
+    DataFactory.blankNode('b1'),
+    DataFactory.namedNode('http://example.org/predicate3'),
+    DataFactory.namedNode('http://example.org/object3'),
+    DataFactory.namedNode('http://example.org/graph1')
+  );
 
-  test.beforeAll(async () => {
-    rdfDb = new RDFDb({ location: '/tmp/test-node.rdfdb', dataFactory: DataFactory });
-    //rdfDb = new RDFDb();
+  test.beforeEach(async () => {
+    //rdfDb = new RDFDb({ location: '/tmp/test-node.rdfdb', dataFactory: DataFactory });
+    rdfDb = new RDFDb();
     await rdfDb.open();
-    console.log('RDFDb instance created in Node.js');
+    clog('RDFDb instance created in Node.js');
   });
 
-  test.afterAll(async () => {
-    //rdfDb.connection.close();
+  test.afterEach(async () => {
     rdfDb.close();
-    console.log('RDFDb instance closed');
+    clog('RDFDb instance closed');
+  });
+
+  test('should detect an initial size of 0', async () => {
+    expect(await rdfDb.size).toEqual(0);
+    clog('There should be initially, none');
   });
 
   test('should import quads into the database', async () => {
-    const quad1 = DataFactory.quad(
-      DataFactory.namedNode('http://example.org/subject1'),
-      DataFactory.namedNode('http://example.org/predicate1'),
-      DataFactory.namedNode('http://example.org/object1'),
-      DataFactory.defaultGraph()
-    );
-
-    const quad2 = DataFactory.quad(
-      DataFactory.namedNode('http://example.org/subject2'),
-      DataFactory.namedNode('http://example.org/predicate2'),
-      DataFactory.literal('A literal value'),
-      DataFactory.defaultGraph()
-    );
-
-    const quad3 = DataFactory.quad(
-      DataFactory.blankNode('b1'),
-      DataFactory.namedNode('http://example.org/predicate3'),
-      DataFactory.namedNode('http://example.org/object3'),
-      DataFactory.namedNode('http://example.org/graph1')
-    );
-
-    const quadStream = Readable.from([quad1, quad2, quad3]);
-    const importEmitter = rdfDb.import(quadStream);
-
-    await new Promise((resolve, reject) => {
-      importEmitter.on('end', resolve);
-      importEmitter.on('error', reject);
-    });
-
-    //console.log('Quads imported into the database');
+    await streamToPromise(rdfDb.import(Readable.from([quad1, quad2, quad3])));
+    expect(await rdfDb.size).toEqual(3);
+    clog('Quads imported into the database');
   });
-
+  
   test('should query all quads', async () => {
+    await streamToPromise(rdfDb.import(Readable.from([quad1, quad2, quad3])));
+    expect(await rdfDb.size).toEqual(3);
+
     const matchStream = rdfDb.match();
 
     const quads = [];
     matchStream.on('data', (quad) => {
+      clog(`test()`, { quad });
       quads.push(quadToString(quad));
+    });
+
+    matchStream.on('error', (err) => {
+      console.error('Error in matchStream:', err);
     });
 
     await streamToPromise(matchStream);
 
     expect(quads.length).toBeGreaterThan(0);
-    //console.log('Querying all quads:', quads);
+    clog('Querying all quads:', quads);
   });
 
   test('should remove a specific quad', async () => {
-    const quad = DataFactory.quad(
-      DataFactory.namedNode('http://example.org/subject1'),
-      DataFactory.namedNode('http://example.org/predicate1'),
-      DataFactory.namedNode('http://example.org/object1'),
-      DataFactory.defaultGraph()
-    );
+    await streamToPromise(rdfDb.import(Readable.from([quad2])));
+    expect(await rdfDb.size).toEqual(1);
 
-    const removeStream = Readable.from([quad]);
-    const removeEmitter = rdfDb.remove(removeStream);
-
-    await new Promise((resolve, reject) => {
-      removeEmitter.on('end', resolve);
-      removeEmitter.on('error', reject);
-    });
-
-    //console.log('Quad removed');
+    await streamToPromise(rdfDb.remove(Readable.from([quad2])));
+    expect(await rdfDb.size).toEqual(0);
+    
+    clog('Quad removed');
   });
 
   test('should remove quads matching a pattern', async () => {
-    const removeMatchesEmitter = rdfDb.removeMatches(
+    await streamToPromise(rdfDb.import(Readable.from([quad1,quad2,quad3])));
+    expect(await rdfDb.size).toEqual(3);
+    await streamToPromise(rdfDb.removeMatches(
       null,
       DataFactory.namedNode('http://example.org/predicate2'),
       null,
       null
-    );
-
-    await new Promise((resolve, reject) => {
-      removeMatchesEmitter.on('end', resolve);
-      removeMatchesEmitter.on('error', reject);
-    });
-
-    //console.log('Quads matching pattern removed');
+    ));
+    expect(await rdfDb.size).toEqual(2);
+    clog('Quads matching pattern removed');
   });
 
   test('should delete a graph', async () => {
-    const deleteGraphEmitter = rdfDb.deleteGraph('http://example.org/graph1');
-
-    await new Promise((resolve, reject) => {
-      deleteGraphEmitter.on('end', resolve);
-      deleteGraphEmitter.on('error', reject);
-    });
-
-    //console.log('Graph deleted');
+    await streamToPromise(rdfDb.import(Readable.from([quad1,quad2,quad3])));
+    expect(await rdfDb.size).toEqual(3);
+    await streamToPromise(rdfDb.deleteGraph('http://example.org/graph1'));
+    expect(await rdfDb.size).toEqual(2);
+    clog('Graph deleted');
   });
 });
 
