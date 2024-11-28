@@ -380,4 +380,30 @@ interface DatasetCore {
   iterable<Quad>;
 };
   */
+
+  add(quad) {
+    return new Promise((resolve, reject) => {
+      const insertQuad = this.#db.prepare(`
+      INSERT INTO quads (subject, predicate, object, graph)
+      VALUES (?, ?, ?, ?);
+    `);
+
+      insertQuad.run(
+        quad.subject.value,
+        quad.predicate.value,
+        quad.object.value,
+        quad.graph.value,
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(this); // Returning this allows method chaining
+          }
+        }
+      );
+
+      insertQuad.finalize();
+    });
+  }
+
 }

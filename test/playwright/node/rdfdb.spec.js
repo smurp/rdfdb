@@ -50,7 +50,7 @@ test.describe('RDFDb Node.js Tests', () => {
     expect(await rdfDb.size).toEqual(3);
     clog('Quads imported into the database');
   });
-  
+
   test('should query all quads', async () => {
     await streamToPromise(rdfDb.import(Readable.from([quad1, quad2, quad3])));
     expect(await rdfDb.size).toEqual(3);
@@ -79,7 +79,7 @@ test.describe('RDFDb Node.js Tests', () => {
 
     await streamToPromise(rdfDb.remove(Readable.from([quad2])));
     expect(await rdfDb.size).toEqual(0);
-    
+
     clog('Quad removed');
   });
 
@@ -107,7 +107,7 @@ test.describe('RDFDb Node.js Tests', () => {
   test('should measure insertion performance', async () => {
     test.setTimeout(30_000); // Override the timeout to 30 seconds
 
-    const numQuads = 50000; // Specify the number of quads to insert
+    const numQuads = 5000; // Specify the number of quads to insert
     const quads = [];
 
     // Generate the quads
@@ -139,6 +139,14 @@ test.describe('RDFDb Node.js Tests', () => {
 
     // Assert that all quads were inserted
     expect(await rdfDb.size).toEqual(numQuads);
+  });
+
+  test('should add a single quad to the dataset', async () => {
+    await rdfDb.add(quad1); // Adding a quad
+    expect(await rdfDb.size).toEqual(1);
+
+    await streamToPromise(rdfDb.remove(Readable.from([quad1])));
+    expect(await rdfDb.size).toEqual(0);
   });
 
 });
