@@ -49,7 +49,7 @@ interface ConstructorOptions {
   close() {
     this.#db.close();
   }
-  
+
   // https://sqlite.org/datatype3.html
   #ensure_structure() {
     //console.log(`this.#db ===`, this.#db);
@@ -70,7 +70,7 @@ interface ConstructorOptions {
 
   /*
 https://rdf.js.org/stream-spec/#stream-interface
-    
+
 [Exposed=(Window,Worker)]
 interface Stream : EventEmitter {
   any read();
@@ -85,11 +85,8 @@ interface Stream : EventEmitter {
   read() {
   }
 
-
-
   /*
 https://rdf.js.org/stream-spec/#source-interface
-    
 [Exposed=(Window,Worker)]
 interface Source {
   constructor();
@@ -171,7 +168,6 @@ When matching with graph set to undefined or null it MUST match all the graphs (
 
 
   /*
-
     [Exposed=(Window,Worker)]
 interface Sink {
   constructor();
@@ -228,7 +224,6 @@ import() Consumes the given stream. The end and error events are used like descr
     return emitter;
   }
 
-  
   /*
 [Exposed=(Window,Worker)]
 interface Store { // Extends Source and Sink
@@ -365,7 +360,7 @@ deleteGraph() Deletes the given named graph. The end and error events are used l
     });
   }
 
-  /*  
+  /*
     DatasetCore Interface
     https://rdf.js.org/dataset-spec/#datasetcore-interface
 
