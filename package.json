@@ -1,14 +1,14 @@
 {
   "name": "rdfdb",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "An RDF/JS compliant lightweight RDF-star quadstore backed by DuckDB",
   "main": "dist/rdfdb.node.js",
   "browser": "dist/rdfdb.browser.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build:node": "cross-env BUILD_ENV=node rollup -c",
-    "build:browser": "cross-env BUILD_ENV=browser rollup -c",
+    "build:node": "BUILD_ENV=node rollup -c",
+    "build:browser": "BUILD_ENV=browser rollup -c",
     "build": "npm run build:node && npm run build:browser",
     "postinstall": "npm run build",
     "watch:build": "onchange -i \"src/**\" \"rollup.config.js\" -- npm run build",
@@ -16,7 +16,6 @@
     "test": "npx playwright test"
   },
   "dependencies": {
-    "cross-env": "^7.0.3",
     "@duckdb/duckdb-wasm": "^1.29.0",
     "duckdb": "^1.1.3",
     "events": "^3.3.0",
